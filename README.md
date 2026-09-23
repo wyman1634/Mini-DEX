@@ -316,6 +316,7 @@ cd web && npm run dev        # 终端 3
 cd server
 USER_KEY=<账户私钥> npm run prep:fuji -- deposit   # approve + deposit 100 USDC + 5 WAVAX → 提 50 USDC
 USER_KEY=<账户私钥> npm run prep:fuji -- check     # 只登录查余额
+USER_A_KEY=<maker 私钥> USER_B_KEY=<taker 私钥> npx tsx scripts/e2e-fuji-trade.ts  # 两地址充值并完成 1 笔撮合
 ```
 
 </details>

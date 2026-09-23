@@ -36,6 +36,7 @@ async function waitBal(token: string, pred: (b: any) => boolean, ms = 90000) {
 async function main() {
   console.log("账户:", account.address, "| server:", await api("/config").then((c) => c.mode));
   const token = await login();
+  console.log("EIP-712 登录成功:", (await api<{ address: string }>("/me", { token })).address);
   if (mode === "deposit") {
     for (const [tokenAddr, amt, label] of [[USDC, 100n * 10n ** 6n, "100 USDC"], [WAVAX, 5n * 10n ** 18n, "5 WAVAX"]] as const) {
       const allowance = await pub.readContract({ address: tokenAddr, abi: erc20, functionName: "allowance", args: [account.address, VAULT] });
