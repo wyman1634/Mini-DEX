@@ -63,6 +63,21 @@ describe("OrderBook", () => {
     expect(r.fills[0]!.maker).toBe("a");
   });
 
+  it("拒绝 self-trade：跳过自己的 maker，继续匹配同价下一位", () => {
+    const ob = new OrderBook();
+    const own = ob.submit(limit("alice", "sell", "100", "1")).resting!;
+    const other = ob.submit(limit("bob", "sell", "100", "1")).resting!;
+
+    const r = ob.submit(market("alice", "buy", "1"));
+
+    expect(r.fills).toHaveLength(1);
+    expect(r.fills[0]!.makerOrderId).toBe(other.id);
+    expect(r.fills[0]!.maker).toBe("bob");
+    expect(r.fills[0]!.taker).toBe("alice");
+    expect(ob.get(own.id)?.remaining).toBe(F("1"));
+    expect(ob.get(other.id)).toBeUndefined();
+  });
+
   it("market 买单：吃穿多个档位", () => {
     const ob = new OrderBook();
     ob.submit(limit("a", "sell", "100", "1"));

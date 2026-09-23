@@ -70,7 +70,7 @@
 - **重启可恢复充提**：启动时从部署区块回放 `Deposit` / `Withdraw` 事件重建余额（Primit `block_sync_state` 游标的极简版）。
 - **订单簿有真实流动性（可选）**：内置做市模块把 Binance `AVAXUSDT` 的盘口镜像到本所订单簿（每 2 秒增量刷新），用户下市价单能真的成交；一个环境变量开关。
 - **行情源容错**：Binance WS 主机按顺序故障切换，全部不可用时自动退化为 REST 轮询，界面上有状态提示。
-- **测试齐全**：合约 13 个、后端 28 个、前端 10 个用例，外加一条一键端到端联调脚本。
+- **测试齐全**：合约 13 个、后端 29 个、前端 10 个用例，外加一条一键端到端联调脚本。
 
 ## 🏗 架构
 
@@ -400,7 +400,7 @@ EIP-712 登录域：`{ name: "MiniDex", version: "1", chainId }`，类型 `Login
 
 ```bash
 cd contracts && forge test            # 13 个用例：deposit / withdraw / 签名校验 / nonce 重放 / deadline
-cd server && npm test                 # 28 个用例：撮合引擎 / 定点数 / 账本守恒 / 做市增量计划
+cd server && npm test                 # 29 个用例：撮合引擎 / 自成交防护 / 定点数 / 账本守恒 / 做市增量计划
 cd web && npm test                    # 10 个用例：Binance K 线解析、合并、主机故障切换
 cd web && npm run typecheck && npm run build
 ./scripts/e2e-anvil.sh                # 端到端：最后一行 E2E OK
@@ -437,7 +437,7 @@ cd web && npm run typecheck && npm run build
 | 账本内存态，重启靠事件回放恢复充提，成交 / 挂单丢失 | TimescaleDB / PostgreSQL 落库 | 进阶 B |
 | `Vault.withdraw` 不用链上 `balances` 做硬上限 | 链上记账 + 限额 | 进阶 A |
 | `/withdraw` 先扣余额再签名，不跟踪 in-flight | 记录 nonce 状态，监听 `Withdraw` 事件对账 | — |
-| 允许自成交（self-trade） | 撮合时拒绝同一账户对手盘 | 必做 1.3 |
+| 自成交防护会跳过同一账户对手盘 | 生产环境可增加 cancel-newest / cancel-oldest 等策略 | — |
 
 ## 🎓 课程与作业
 

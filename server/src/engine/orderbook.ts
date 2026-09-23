@@ -1,5 +1,5 @@
 // 撮合引擎（纯内存、零依赖）。
-// 规则：价格优先、时间优先（同价 FIFO）；成交价 = maker（挂单方）的价格。
+// 规则：价格优先、时间优先（同价 FIFO）、禁止自成交；成交价 = maker（挂单方）的价格。
 // 数据结构：每边一个 Map<价格, Level> + 一个有序价格数组（bids 降序 / asks 升序）。
 // 初学者能读懂 > 极致性能；生产引擎（如 Primit 的 Rust 引擎）会用更高效的结构。
 
@@ -100,15 +100,20 @@ export class OrderBook {
     const fills: Fill[] = [];
     const opposite = this.sideOf(taker.side === "buy" ? "sell" : "buy");
 
-    while (taker.remaining > 0n && opposite.prices.length > 0) {
-      const bestPrice = opposite.prices[0]!;
+    let priceIndex = 0;
+    while (taker.remaining > 0n && priceIndex < opposite.prices.length) {
+      const bestPrice = opposite.prices[priceIndex]!;
       // limit 单只在价格能对上时成交；market 单不看价
       if (taker.type === "limit" && !this.crosses(taker.side, taker.price, bestPrice)) break;
 
       const level = opposite.book.get(bestPrice)!;
-      while (taker.remaining > 0n && level.orders.length > 0) {
-        const maker = level.orders[0]!;
-        // TODO 生产环境需要 self-trade prevention（自成交会刷量，这里为了简单允许）
+      let orderIndex = 0;
+      while (taker.remaining > 0n && orderIndex < level.orders.length) {
+        const maker = level.orders[orderIndex]!;
+        if (maker.owner === taker.owner) {
+          orderIndex++;
+          continue;
+        }
         const qty = taker.remaining < maker.remaining ? taker.remaining : maker.remaining;
         taker.remaining -= qty;
         maker.remaining -= qty;
@@ -118,13 +123,17 @@ export class OrderBook {
           price: maker.price, qty, side: taker.side, ts: taker.ts,
         });
         if (maker.remaining === 0n) {
-          level.orders.shift();
+          level.orders.splice(orderIndex, 1);
           this.byId.delete(maker.id);
+        } else {
+          orderIndex++;
         }
       }
       if (level.orders.length === 0) {
         opposite.book.delete(bestPrice);
-        opposite.prices.shift();
+        opposite.prices.splice(priceIndex, 1);
+      } else {
+        priceIndex++;
       }
     }
     return fills;
