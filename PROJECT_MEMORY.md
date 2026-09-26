@@ -38,7 +38,6 @@ Durable, non-secret context for resuming the Avalanche Bootcamp Task 7 work. Rev
 ## Submission
 
 - Bootcamp branch: `submission/wyman1634-task7`
-- Submission commit: `9164ef73b27df9d5f676309355b0acb7d2b4ee89`
 - Official PR: <https://github.com/openbuildxyz/Avalanche-101-Bootcamp/pull/134>
 - Evidence path: `learn/wyman1634/task7/`
 - Last checked on 2026-09-26: PR open, ready for review, mergeable, clean, and limited to the Task 7 README plus five evidence images.
